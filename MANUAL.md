@@ -1,18 +1,20 @@
-# Manual Completo — NetCalc Pro
-
-## 1. Visão Geral
-O **NetCalc Pro** (`netcalc-pro-v3.html`) roda localmente no navegador de computadores ou celulares, salvando projetos e histórico recente no `localStorage` do dispositivo, com suporte a backup e restauração em JSON.
-
-## 2. Calculadora CIDR e Divisão de Sub-redes
-- Informe um endereço IPv4 válido (ex.: `192.168.1.0`) e escolha o prefixo CIDR (`/0` a `/32`) pelo seletor ou controle deslizante.
-- Veja rede, broadcast, primeiro e último host válido, máscara decimal, máscara coringa (wildcard), representação binária de 32 bits e classe/escopo.
-- Use **Dividir Rede** para segmentar por quantidade de sub-redes ou por mínimo de hosts úteis por sub-rede.
-- Use o **Verificador de Pertencimento** para testar se um IP pertence à rede principal.
-
-## 3. Planejador VLSM
-- Defina o bloco base e adicione sub-redes com nomes e demandas de hosts.
-- O cálculo ordena as demandas do maior para o menor bloco, alinha os limites de endereço e exibe capacidade, IPs alocados, sobra e percentual de aproveitamento, com exportação em CSV.
-
-## 4. Tabela CIDR, Projetos e Relatórios
-- Consulte a **Tabela CIDR** (`/0` a `/32`) e aplique prefixos com um clique.
-- Salve, renomeie, abra ou exclua projetos pelo menu lateral ou gerenciador, exporte backup JSON e gere relatórios para impressão/PDF, TXT ou CSV.
+NetCalc Pro — Calculadora de Sub-redes IPv4 & VLSM
+O NetCalc Pro é uma aplicação web local e responsiva para cálculos de endereçamento IPv4, CIDR, segmentação de sub-redes, planejamento VLSM, consulta rápida de prefixos (/0 a /32), verificação de pertencimento de IP e geração de relatórios técnicos.
+Projetado para rodar diretamente no navegador no PC ou no celular (Android/iOS), sem necessidade de instalação de dependências ou backend obrigatório, com armazenamento local (localStorage), backup/restauração em JSON e exportação de relatórios.
+Funcionalidades Principais
+Calculadora CIDR: Cálculo de endereço de rede, broadcast, primeiro e último host válido, máscara decimal, máscara coringa (wildcard), representação hexadecimal, classe/escopo e visualização binária de 32 bits (rede vs. host).
+Divisão de Sub-redes (Segmentação): Divisão por quantidade de sub-redes desejadas ou por número mínimo de hosts válidos por sub-rede, com filtro e paginação para blocos grandes.
+Verificador de Pertencimento: Testa se um IP de destino pertence à rede principal calculada e identifica sua função (rede, broadcast ou host válido).
+Planejador VLSM Completo: Ordenação automática decrescente por demanda de hosts, alinhamento estrito de limites de bloco, cálculo de IPs alocados/livres, percentual de aproveitamento e exportação em CSV.
+Tabela de Referência CIDR (/0 a /32): Consulta rápida com máscaras decimal, coringa e hexadecimal, total de IPs e hosts úteis, com aplicação direta na calculadora.
+Projetos, Histórico e Backup: Gerenciamento de projetos salvos localmente, histórico recente, tema claro/escuro e backup/restauração em arquivo .json.
+Relatórios e Exportação: Visualização de relatório técnico com cópia de texto, exportação em .txt e .csv e impressão/salvamento em PDF.
+Como Abrir e Usar Localmente
+1. Abrir direto no navegador (PC ou Celular)
+1. Baixe ou clone este repositório para o seu computador ou aparelho.
+2. Localize o arquivo principal da aplicação na raiz do projeto: netcalc-pro-v3.html.
+3. No PC: dê um duplo clique em netcalc-pro-v3.html para abri-lo no navegador padrão (Chrome, Edge, Firefox, Brave etc.).
+4. No celular: abra o arquivo netcalc-pro-v3.html pelo gerenciador de arquivos ou navegador do aparelho. Se quiser acesso rápido, utilize a opção "Adicionar à tela inicial" do navegador.
+Observação: Alguns recursos externos (como fontes e estilos via CDN) podem exigir conexão com a internet na primeira abertura, enquanto o cálculo e o armazenamento local continuam funcionando no navegador.
+2. Rodar em um servidor local (Opcional)
+Se preferir servir os arquivos via HTTP local (por exemplo, para testes em rede local ou desenvolvimento):
