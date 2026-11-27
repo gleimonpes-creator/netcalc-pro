@@ -1,0 +1,84 @@
+/* Estilos Customizados e Otimização Mobile/Android + Impressão */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Estilização suave de Range Slider para toque no Android */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      border-radius: 999px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #2563eb;
+      cursor: pointer;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: transform 0.15s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:active {
+      transform: scale(1.18);
+    }
+
+    /* Scrollbar discreta */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.4);
+      border-radius: 999px;
+    }
+
+    /* Animação do Toast / Snackbar Android */
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translate(-50%, 20px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .toast-enter {
+      animation: slideUpFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Otimização para Impressão e Geração de PDF */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      #app-header, #drawer-overlay, #navigation-drawer, #main-calculator-view, 
+      #vlsm-planner-view, #cidr-table-view, #modals-container, .no-print, #toast-container {
+        display: none !important;
+      }
+      #report-view {
+        display: block !important;
+        position: static !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      #report-view * {
+        color: #000000 !important;
+        border-color: #cbd5e1 !important;
+      }
+      .print-break-inside {
+        break-inside: avoid;
+      }
+    }

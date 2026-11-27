@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>NetCalc Pro - Calculadora de Sub-redes IPv4 & VLSM</title>
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Inter & JetBrains Mono para IPs/Binário -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+
+
+  <!-- Configuração Tailwind para Dark Mode e Fontes -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200 min-h-screen flex flex-col">
+
+  <!-- ===================================================================== -->
+  <!-- CABEÇALHO FIXO (TOP-HEADER + TOP-NAV)                                 -->
+  <!-- ===================================================================== -->
+  <header id="app-header" class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+    <div class="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+      
+      <!-- Esquerda: Botão Menu Hambúrguer + Identidade do App / Projeto Ativo -->
+      <div class="flex items-center gap-3 min-w-0">
+        <button id="btn-open-drawer" aria-label="Abrir Menu Lateral" class="p-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+
+        <div class="min-w-0 flex flex-col">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-blue-600 text-white text-xs font-bold shadow-sm">IP</span>
+            <h1 class="font-bold text-base sm:text-lg tracking-tight truncate">NetCalc Pro</h1>
+          </div>
+          <p id="header-project-badge" class="text-xs text-slate-500 dark:text-slate-400 truncate">
+            Rascunho não salvo
+          </p>
+        </div>
+      </div>
+
+      <!-- Centro: Navegação Direta (Top-Nav) -->
+      <nav id="top-nav" aria-label="Navegação Principal" class="hidden md:flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70">
+        <button type="button" data-nav="calculator" class="top-nav-item px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-2xs transition">
+          Calculadora CIDR
+        </button>
+        <button type="button" data-nav="vlsm" class="top-nav-item px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition">
+          Planejador VLSM
+        </button>
+        <button type="button" data-nav="cidr-table" class="top-nav-item px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition">
+          Tabela CIDR
+        </button>
+      </nav>
+
+      <!-- Direita: Indicador Rede Ativa + Ações Rápidas (Salvar, Relatório, Tema) -->
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <span id="header-active-network-badge" title="Rede Ativa em Foco" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/70 font-mono text-xs font-semibold text-blue-700 dark:text-blue-300">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span id="header-active-network-text">192.168.1.0/24</span>
+        </span>
+
+        <button id="btn-header-save" title="Salvar Projeto" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-semibold shadow-sm transition active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+          </svg>
+          <span class="hidden sm:inline">Salvar</span>
+        </button>
+
+        <button id="btn-header-report" title="Ver Relatório Técnico" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-95">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </button>
+
+        <button id="btn-toggle-theme" aria-label="Alternar Tema" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-amber-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-95">
+          <!-- Ícone Lua (Modo Claro ativo) -->
+          <svg id="icon-moon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+          </svg>
+          <!-- Ícone Sol (Modo Escuro ativo) -->
+          <svg id="icon-sun" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Barra Secundária Mobile (Top-Nav compacto para telas pequenas) -->
+    <div class="md:hidden border-t border-slate-200/80 dark:border-slate-800 px-3 py-1.5 flex items-center justify-between gap-1 bg-slate-50/90 dark:bg-slate-900/90">
+      <div class="flex items-center gap-1 overflow-x-auto">
+        <button type="button" data-nav="calculator" class="top-nav-item px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-2xs whitespace-nowrap transition">
+          Calculadora CIDR
+        </button>
+        <button type="button" data-nav="vlsm" class="top-nav-item px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap transition">
+          Planejador VLSM
+        </button>
+        <button type="button" data-nav="cidr-table" class="top-nav-item px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap transition">
+          Tabela CIDR
+        </button>
+      </div>
+      <span id="mobile-active-network-text" class="font-mono text-[11px] font-semibold text-blue-600 dark:text-blue-400 shrink-0 pl-1">
+        192.168.1.0/24
+      </span>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- MENU LATERAL (NAVIGATION DRAWER / SIDEBAR)                            -->
+  <!-- ===================================================================== -->
+  <div id="drawer-overlay" class="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs hidden transition-opacity duration-200"></div>
+  
+  <aside id="navigation-drawer" class="fixed top-0 left-0 bottom-0 z-50 w-80 max-w-[85vw] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-2xl transform -translate-x-full transition-transform duration-300 ease-out flex flex-col">
+    
+    <!-- Topo do Drawer -->
+    <div class="p-5 bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-between">
+      <div>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-mono font-bold text-sm">
+            /24
+          </div>
+          <span class="font-bold text-lg tracking-tight">NetCalc Pro</span>
+        </div>
+        <p class="text-xs text-blue-100 mt-1">Engenharia IPv4, CIDR & VLSM</p>
+      </div>
+      <button id="btn-close-drawer" aria-label="Fechar Menu" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Cartão de Rede Atual em Foco (Sincronizado em tempo real) -->
+    <div class="px-3 pt-3">
+      <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rede Atual em Foco</span>
+          <span id="sidebar-focus-hosts" class="text-[10px] font-mono font-semibold text-emerald-600 dark:text-emerald-400">254 hosts</span>
+        </div>
+        <div id="sidebar-focus-cidr" class="font-mono text-sm font-bold text-blue-600 dark:text-blue-400 truncate">
+          192.168.1.0/24
+        </div>
+        <div id="sidebar-focus-mask" class="font-mono text-[11px] text-slate-500 dark:text-slate-400 truncate">
+          Máscara: 255.255.255.0
+        </div>
+      </div>
+    </div>
+
+    <!-- Navegação Principal no Drawer -->
+    <div class="p-3 space-y-1 border-b border-slate-200 dark:border-slate-800">
+      <button data-nav="calculator" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 transition">
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+        </svg>
+        <span>Calculadora CIDR</span>
+      </button>
+
+      <button data-nav="vlsm" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        <svg class="w-5 h-5 shrink-0 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+        </svg>
+        <span>Planejador VLSM</span>
+      </button>
+
+      <button data-nav="cidr-table" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        <svg class="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+        </svg>
+        <span>Tabela CIDR</span>
+      </button>
+
+      <button data-nav="report" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        <svg class="w-5 h-5 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <span>Relatório Técnico & Exportar</span>
+      </button>
+
+      <!-- Atalhos Rápidos no Menu Lateral -->
+      <div class="pt-2 mt-1 border-t border-slate-100 dark:border-slate-800/80 space-y-1">
+        <span class="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Atalhos Rápidos</span>
+        <button id="btn-shortcut-copy-cidr" type="button" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+          </svg>
+          <span>Copiar Resumo CIDR</span>
+        </button>
+
+        <button id="btn-shortcut-use-vlsm" type="button" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+          </svg>
+          <span>Usar Rede no VLSM</span>
+        </button>
+
+        <button id="btn-shortcut-export-vlsm" type="button" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span>Exportar VLSM CSV</span>
+        </button>
+      </div>
+
+      <div class="pt-2 mt-1 border-t border-slate-100 dark:border-slate-800/80 space-y-1">
+        <button id="btn-drawer-new" class="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <svg class="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span>Novo Cálculo / Limpar</span>
+        </button>
+
+        <button id="btn-drawer-save-as" class="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <svg class="w-4 h-4 shrink-0 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+          </svg>
+          <span>Salvar Como Novo Projeto...</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Lista de Projetos Salvos no Menu Lateral -->
+    <div class="flex-1 overflow-y-auto p-3 flex flex-col">
+      <div class="flex items-center justify-between px-2 mb-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          Projetos Salvos (<span id="drawer-projects-count">0</span>)
+        </span>
+        <button id="btn-open-projects-modal" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+          Gerenciar
+        </button>
+      </div>
+
+      <div id="drawer-projects-list" class="space-y-1.5 flex-1">
+        <!-- Preenchido dinamicamente via JS -->
+      </div>
+
+      <!-- Histórico Rápido Recente -->
+      <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+        <div class="flex items-center justify-between px-2 mb-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            Cálculos Recentes
+          </span>
+          <button id="btn-clear-history" type="button" class="hidden text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline">
+            Limpar histórico
+          </button>
+        </div>
+        <div id="drawer-history-list" class="space-y-1">
+          <!-- Preenchido dinamicamente via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Rodapé do Drawer: Backup & Restauração JSON -->
+    <div class="p-3 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-200 dark:border-slate-800 grid grid-cols-2 gap-2">
+      <button id="btn-export-backup" class="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        <span>Backup JSON</span>
+      </button>
+
+      <label class="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer">
+        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+        </svg>
+        <span>Restaurar</span>
+        <input type="file" id="input-import-backup" accept=".json" class="hidden">
+      </label>
+    </div>
+  </aside>
+
+  <!-- ===================================================================== -->
+  <!-- ÁREA PRINCIPAL: CALCULADORA DE SUB-REDES                              -->
+  <!-- ===================================================================== -->
+  <main id="main-calculator-view" class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-5">
+
+    <!-- Barra de Status do Projeto Atual -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl p-3.5 sm:p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <h2 id="current-project-title" class="font-bold text-sm sm:text-base truncate">Projeto Sem Título</h2>
+            <button id="btn-quick-rename" title="Renomear Projeto" class="p-1 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
+            </button>
+          </div>
+          <p id="current-project-desc" class="text-xs text-slate-500 dark:text-slate-400 truncate">
+            Configure o IP e a máscara abaixo para calcular e salvar
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+        <button id="btn-bar-new" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+          Novo
+        </button>
+        <button id="btn-bar-projects" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+          Projetos (<span id="bar-projects-count">0</span>)
+        </button>
+        <button id="btn-bar-save" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition">
+          Salvar Projeto
+        </button>
+      </div>
+    </section>
+
+    <!-- Grid Principal: Entradas (Esquerda) e Resultados Detalhados (Direita) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+      <!-- COLUNA 1: PARÂMETROS DE ENTRADA E DIVISÃO FLSM -->
+      <div class="lg:col-span-5 space-y-5">
+        
+        <!-- Card de Endereço IP e Máscara CIDR -->
+        <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              1. Endereço Base & CIDR
+            </h3>
+            <!-- Presets rápidos para agilidade no celular -->
+            <div class="flex gap-1">
+              <button type="button" data-preset="192.168.1.0/24" class="preset-btn px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-slate-600 dark:text-slate-300 transition">192.168.x</button>
+              <button type="button" data-preset="172.16.0.0/16" class="preset-btn px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-slate-600 dark:text-slate-300 transition">172.16.x</button>
+              <button type="button" data-preset="10.0.0.0/8" class="preset-btn px-2 py-1 text-[11px] font-mono font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-slate-600 dark:text-slate-300 transition">10.x</button>
+            </div>
+          </div>
+
+          <!-- Input IPv4 -->
+          <div>
+            <label for="input-ip" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
+              Endereço IPv4 (Host ou Rede)
+            </label>
+            <div class="relative">
+              <input 
+                type="text" 
+                id="input-ip" 
+                inputmode="decimal"
+                placeholder="Ex: 192.168.1.0 ou 192.168.1.0/24" 
+                value="192.168.1.0"
+                class="w-full font-mono text-base sm:text-lg font-semibold px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:outline-none transition"
+              >
+              <span id="ip-valid-badge" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
+                Válido
+              </span>
+            </div>
+            <p id="ip-error-msg" class="hidden mt-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">
+              Endereço IPv4 inválido. Digite 4 octetos entre 0 e 255 (ex: 192.168.0.1).
+            </p>
+          </div>
+
+          <!-- Prefixo CIDR: Dropdown + Slider -->
+          <div class="space-y-2.5 pt-1">
+            <div class="flex items-center justify-between gap-3">
+              <label for="select-cidr" class="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                Máscara de Sub-rede / Prefixo
+              </label>
+              <select id="select-cidr" class="font-mono text-sm font-semibold px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 focus:border-blue-600 focus:outline-none">
+                <!-- Opções /0 a /32 geradas via JS -->
+              </select>
+            </div>
+
+            <div class="px-1">
+              <input type="range" id="slider-cidr" min="0" max="32" value="24" class="w-full bg-slate-200 dark:bg-slate-700">
+              <div class="flex justify-between text-[11px] font-mono text-slate-400 mt-1">
+                <span>/0</span>
+                <span>/8 (A)</span>
+                <span>/16 (B)</span>
+                <span>/24 (C)</span>
+                <span>/32</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Card de Divisão de Sub-redes (Segmentação Igualitária) -->
+        <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              2. Dividir Rede (Segmentação)
+            </h3>
+            <span id="division-badge" class="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+              Sem divisão
+            </span>
+          </div>
+
+          <!-- Seletor de Modo de Divisão -->
+          <div class="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-950">
+            <button type="button" data-divmode="none" class="div-mode-btn py-2 px-2 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-2xs transition">
+              Rede Única
+            </button>
+            <button type="button" data-divmode="subnets" class="div-mode-btn py-2 px-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+              Por Sub-redes
+            </button>
+            <button type="button" data-divmode="hosts" class="div-mode-btn py-2 px-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+              Por Hosts/Rede
+            </button>
+          </div>
+
+          <!-- Painel Condicional: Dividir por Sub-redes -->
+          <div id="panel-div-subnets" class="hidden space-y-2">
+            <label for="select-target-subnets" class="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+              Quantidade de Sub-redes Desejadas:
+            </label>
+            <select id="select-target-subnets" class="w-full font-mono text-sm font-semibold px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 focus:border-blue-600 focus:outline-none">
+              <!-- Preenchido dinamicamente conforme CIDR base -->
+            </select>
+            <p id="subnets-helper-text" class="text-xs text-slate-500 dark:text-slate-400"></p>
+          </div>
+
+          <!-- Painel Condicional: Dividir por Hosts Necessários -->
+          <div id="panel-div-hosts" class="hidden space-y-2">
+            <label for="input-target-hosts" class="block text-xs font-semibold text-slate-600 dark:text-slate-300">
+              Mínimo de Hosts Válidos por Sub-rede:
+            </label>
+            <div class="flex gap-2">
+              <input 
+                type="number" 
+                id="input-target-hosts" 
+                min="1" 
+                value="30" 
+                inputmode="numeric"
+                class="w-full font-mono text-sm font-semibold px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 focus:border-blue-600 focus:outline-none"
+              >
+            </div>
+            <p id="hosts-helper-text" class="text-xs text-slate-500 dark:text-slate-400"></p>
+          </div>
+        </section>
+
+        <!-- Ferramenta Extra: Verificador de Pertencimento de IP -->
+        <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              3. Verificador de Pertencimento
+            </h3>
+            <span class="text-[11px] font-medium text-slate-400">Teste de Rota</span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Verifique se um IP de destino pertence à rede principal calculada acima:
+          </p>
+          <div class="flex gap-2">
+            <input 
+              type="text" 
+              id="input-check-ip" 
+              inputmode="decimal"
+              placeholder="Ex: 192.168.1.45" 
+              class="flex-1 font-mono text-sm font-semibold px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 focus:border-blue-600 focus:outline-none"
+            >
+            <button id="btn-check-ip" type="button" class="px-4 py-2.5 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white text-xs font-semibold transition active:scale-95">
+              Testar
+            </button>
+          </div>
+          <div id="check-ip-result" class="hidden p-3 rounded-xl text-xs font-medium"></div>
+        </section>
+
+      </div>
+
+      <!-- COLUNA 2: RESULTADOS TÉCNICOS DETALHADOS & BINÁRIO -->
+      <div class="lg:col-span-7 space-y-5">
+        
+        <!-- Resumo da Rede Principal -->
+        <section class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div>
+              <h3 class="font-bold text-base text-slate-800 dark:text-white">Resultado da Rede Principal</h3>
+              <p id="res-cidr-notation" class="text-xs font-mono text-blue-600 dark:text-blue-400 font-semibold mt-0.5">
+                192.168.1.0/24
+              </p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span id="res-ip-class" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+                Classe C
+              </span>
+              <span id="res-ip-scope" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                Privado (RFC 1918)
+              </span>
+            </div>
+          </div>
+
+          <!-- Grid de Cards de Resultados (Com botão de copiar com 1 toque) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="results-cards-grid">
+            <!-- Gerado dinamicamente via JS para garantir cópia rápida -->
+          </div>
+
+          <!-- Representação Binária dos Octetos -->
+          <div class="pt-2">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Representação Binária (32 bits)</span>
+              <span class="text-[11px] text-slate-400"><span class="text-blue-500 font-bold">Rede</span> | <span class="text-emerald-500 font-bold">Host</span></span>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-950 rounded-xl p-3 border border-slate-200 dark:border-slate-800 space-y-2 overflow-x-auto">
+              <div class="flex items-center justify-between gap-4 min-w-[310px]">
+                <span class="text-xs font-semibold text-slate-500 w-20 shrink-0">IP Base:</span>
+                <code id="bin-ip" class="font-mono text-xs sm:text-sm tracking-wider"></code>
+              </div>
+              <div class="flex items-center justify-between gap-4 min-w-[310px]">
+                <span class="text-xs font-semibold text-slate-500 w-20 shrink-0">Máscara:</span>
+                <code id="bin-mask" class="font-mono text-xs sm:text-sm tracking-wider"></code>
+              </div>
+              <div class="flex items-center justify-between gap-4 min-w-[310px]">
+                <span class="text-xs font-semibold text-slate-500 w-20 shrink-0">Rede:</span>
+                <code id="bin-network" class="font-mono text-xs sm:text-sm tracking-wider"></code>
+              </div>
+              <div class="flex items-center justify-between gap-4 min-w-[310px]">
+                <span class="text-xs font-semibold text-slate-500 w-20 shrink-0">Broadcast:</span>
+                <code id="bin-broadcast" class="font-mono text-xs sm:text-sm tracking-wider"></code>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tabela/Lista de Sub-redes Geradas (Aparece quando há divisão) -->
+        <section id="subnets-table-section" class="hidden bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="font-bold text-base text-slate-800 dark:text-white">
+                Sub-redes Geradas (<span id="generated-subnets-total">0</span>)
+              </h3>
+              <p id="generated-subnets-subtitle" class="text-xs text-slate-500 dark:text-slate-400">
+                Novo prefixo /26 • 62 hosts úteis por sub-rede
+              </p>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <input 
+                type="text" 
+                id="input-filter-subnets" 
+                placeholder="Filtrar IP ou #..." 
+                class="w-36 sm:w-44 text-xs px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 focus:border-blue-600 focus:outline-none"
+              >
+              <button id="btn-goto-report-from-table" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition">
+                Relatório
+              </button>
+            </div>
+          </div>
+
+          <!-- Aviso de paginação inteligente para redes gigantes -->
+          <div id="subnets-limit-banner" class="hidden p-3 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between gap-2">
+            <span id="subnets-limit-text">Exibindo as primeiras 100 sub-redes para manter o desempenho fluido no celular.</span>
+            <button id="btn-load-more-subnets" class="px-2.5 py-1 rounded-lg bg-amber-600 text-white font-semibold shrink-0">
+              +100
+            </button>
+          </div>
+
+          <!-- Container Responsivo da Tabela -->
+          <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 dark:bg-slate-950 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                  <th class="py-3 px-3">#</th>
+                  <th class="py-3 px-3">Rede / CIDR</th>
+                  <th class="py-3 px-3">Faixa de Hosts Válidos</th>
+                  <th class="py-3 px-3">Broadcast</th>
+                  <th class="py-3 px-3 text-right">Ação</th>
+                </tr>
+              </thead>
+              <tbody id="subnets-tbody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono text-xs">
+                <!-- Linhas geradas via JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- PLANEJADOR VLSM COMPLETO                                              -->
+  <!-- ===================================================================== -->
+  <section id="vlsm-planner-view" class="hidden flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-5">
+    
+    <!-- Cabeçalho do Planejador VLSM -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Alocação Dinâmica de Blocos</span>
+        <h2 class="text-lg sm:text-xl font-bold mt-0.5">Planejador VLSM Completo</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Ordenação automática decrescente por demanda, alinhamento de limites de bloco e cálculo de aproveitamento.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="btn-vlsm-sync-base" type="button" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+          Sincronizar Rede Principal
+        </button>
+        <button id="btn-vlsm-export-csv" type="button" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          <span>Exportar VLSM CSV</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <!-- Coluna Esquerda: Rede Base VLSM & Lista de Demandas -->
+      <div class="lg:col-span-5 space-y-5">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <h3 class="font-bold text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400">1. Bloco Base Disponível</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div class="sm:col-span-2">
+              <label for="vlsm-base-ip" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Rede / IP Base</label>
+              <input type="text" id="vlsm-base-ip" inputmode="decimal" value="192.168.1.0" class="w-full font-mono text-sm font-semibold px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 focus:border-blue-600 focus:outline-none">
+            </div>
+            <div>
+              <label for="vlsm-base-cidr" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Prefixo</label>
+              <select id="vlsm-base-cidr" class="w-full font-mono text-sm font-semibold px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 focus:border-blue-600 focus:outline-none">
+                <!-- Preenchido via JS (/0 a /32) -->
+              </select>
+            </div>
+          </div>
+          <p id="vlsm-base-error" class="hidden text-xs font-medium text-rose-600 dark:text-rose-400"></p>
+          <div id="vlsm-base-summary" class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs flex items-center justify-between">
+            <span class="text-slate-500">Rede alinhada:</span>
+            <strong id="vlsm-aligned-network" class="font-mono text-blue-600 dark:text-blue-400">192.168.1.0/24 (256 endereços)</strong>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400">2. Sub-redes Requisitadas</h3>
+            <button id="btn-vlsm-add-row" type="button" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
+              <span>+ Adicionar Sub-rede</span>
+            </button>
+          </div>
+
+          <div id="vlsm-inputs-list" class="space-y-2.5">
+            <!-- Linhas dinâmicas de entrada VLSM -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Coluna Direita: Métricas de Utilização & Tabela Alocada -->
+      <div class="lg:col-span-7 space-y-5">
+        <!-- Cards de Resumo de Utilização e Sobra -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <span class="block text-[11px] font-medium text-slate-500 dark:text-slate-400">Capacidade Base</span>
+            <span id="vlsm-stat-total" class="font-mono text-base font-bold text-slate-800 dark:text-white mt-0.5 block">256</span>
+          </div>
+          <div class="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <span class="block text-[11px] font-medium text-slate-500 dark:text-slate-400">IPs Alocados</span>
+            <span id="vlsm-stat-allocated" class="font-mono text-base font-bold text-blue-600 dark:text-blue-400 mt-0.5 block">0</span>
+          </div>
+          <div class="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <span class="block text-[11px] font-medium text-slate-500 dark:text-slate-400">IPs Livres (Sobra)</span>
+            <span id="vlsm-stat-free" class="font-mono text-base font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 block">256</span>
+          </div>
+          <div class="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <span class="block text-[11px] font-medium text-slate-500 dark:text-slate-400">Aproveitamento</span>
+            <span id="vlsm-stat-efficiency" class="font-mono text-base font-bold text-indigo-600 dark:text-indigo-400 mt-0.5 block">0%</span>
+          </div>
+        </div>
+
+        <!-- Alerta de Estouro de Capacidade VLSM -->
+        <div id="vlsm-overflow-alert" class="hidden p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 font-medium"></div>
+
+        <!-- Tabela de Resultados VLSM -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-base">Plano de Endereçamento VLSM</h3>
+            <span class="text-xs text-slate-500">Ordenado por maior bloco</span>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 dark:bg-slate-950 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                  <th class="py-3 px-3">Sub-rede</th>
+                  <th class="py-3 px-3">Req / Úteis</th>
+                  <th class="py-3 px-3">Rede / CIDR</th>
+                  <th class="py-3 px-3">Máscara</th>
+                  <th class="py-3 px-3">Faixa de Hosts</th>
+                  <th class="py-3 px-3">Broadcast</th>
+                  <th class="py-3 px-3 text-right">Uso</th>
+                </tr>
+              </thead>
+              <tbody id="vlsm-results-tbody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono text-xs">
+                <!-- Preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- TABELA DE REFERÊNCIA CIDR (/0 A /32)                                  -->
+  <!-- ===================================================================== -->
+  <section id="cidr-table-view" class="hidden flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-5">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Guia Rápido IPv4</span>
+        <h2 class="text-lg sm:text-xl font-bold mt-0.5">Tabela de Referência CIDR (/0 a /32)</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Toque em qualquer prefixo para aplicá-lo diretamente na Calculadora CIDR.</p>
+      </div>
+      <input type="text" id="input-filter-cidr-table" placeholder="Filtrar /24, 255.255..." class="w-44 sm:w-56 text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 focus:border-blue-600 focus:outline-none">
+    </div>
+
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs">
+      <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-50 dark:bg-slate-950 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <th class="py-3 px-3">CIDR</th>
+              <th class="py-3 px-3">Máscara Decimal</th>
+              <th class="py-3 px-3">Máscara Coringa</th>
+              <th class="py-3 px-3">Hexadecimal</th>
+              <th class="py-3 px-3 text-right">Total IPs</th>
+              <th class="py-3 px-3 text-right">Hosts Úteis</th>
+              <th class="py-3 px-3 text-right">Ação</th>
+            </tr>
+          </thead>
+          <tbody id="cidr-reference-tbody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono text-xs">
+            <!-- Preenchido via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- VISUALIZAÇÃO DE RELATÓRIO TÉCNICO & EXPORTAÇÃO                        -->
+  <!-- ===================================================================== -->
+  <section id="report-view" class="hidden flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-5">
+    
+    <!-- Barra de Ferramentas do Relatório (Oculta na impressão) -->
+    <div class="no-print bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-wrap items-center justify-between gap-3">
+      <button id="btn-back-to-calc" class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs sm:text-sm font-semibold transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        <span>Voltar à Calculadora</span>
+      </button>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="btn-copy-report" class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 text-white text-xs font-semibold transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+          </svg>
+          <span>Copiar Texto</span>
+        </button>
+
+        <button id="btn-export-txt" class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition">
+          <span>TXT</span>
+        </button>
+
+        <button id="btn-export-csv" class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition">
+          <span>CSV / Excel</span>
+        </button>
+
+        <button id="btn-print-report" class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+          </svg>
+          <span>Imprimir / PDF</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Documento do Relatório Consolidado -->
+    <article id="report-document" class="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+      <!-- Conteúdo gerado dinamicamente via JS -->
+    </article>
+
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- MODAIS (SALVAR PROJETO, RENOMEAR, GERENCIAR PROJETOS, CONFIRMAÇÃO)    -->
+  <!-- ===================================================================== -->
+  <div id="modals-container">
+    
+    <!-- Modal: Salvar / Renomear Projeto -->
+    <div id="modal-project-form" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 id="modal-form-title" class="font-bold text-lg">Salvar Projeto</h3>
+          <button type="button" class="btn-close-modal p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form id="form-save-project" class="space-y-4">
+          <input type="hidden" id="form-project-mode" value="create">
+          <input type="hidden" id="form-project-id" value="">
+
+          <div>
+            <label for="input-project-name" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
+              Nome do Projeto *
+            </label>
+            <input 
+              type="text" 
+              id="input-project-name" 
+              required
+              maxlength="60"
+              placeholder="Ex: Matriz São Paulo - VLANs"
+              class="w-full text-sm px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 focus:border-blue-600 focus:outline-none"
+            >
+          </div>
+
+          <div id="group-project-desc">
+            <label for="input-project-desc" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
+              Descrição / Observações (Opcional)
+            </label>
+            <textarea 
+              id="input-project-desc" 
+              rows="2"
+              maxlength="160"
+              placeholder="Ex: Segmentação para Administrativo, Wi-Fi e Servidores"
+              class="w-full text-sm px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 focus:border-blue-600 focus:outline-none"
+            ></textarea>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" class="btn-close-modal px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+              Cancelar
+            </button>
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition">
+              Confirmar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Gerenciador Completo de Projetos Salvos -->
+    <div id="modal-projects-manager" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl">
+        <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div>
+            <h3 class="font-bold text-lg">Projetos Salvos</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Toque para carregar, renomear ou excluir cálculos</p>
+          </div>
+          <button type="button" class="btn-close-modal p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="p-4 border-b border-slate-100 dark:border-slate-800">
+          <input 
+            type="text" 
+            id="input-search-projects" 
+            placeholder="Buscar projeto por nome ou IP..." 
+            class="w-full text-sm px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 focus:border-blue-600 focus:outline-none"
+          >
+        </div>
+
+        <div id="modal-projects-list" class="p-4 overflow-y-auto space-y-2.5 flex-1">
+          <!-- Lista gerada via JS -->
+        </div>
+
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
+          <span class="text-xs text-slate-400">Armazenamento local offline</span>
+          <button type="button" class="btn-close-modal px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold">
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Confirmação Customizada (Substitui confirm() nativo) -->
+    <div id="modal-confirm" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-5 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <div>
+            <h4 id="confirm-title" class="font-bold text-base">Confirmar Ação</h4>
+            <p id="confirm-message" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Tem certeza?</p>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-1">
+          <button id="btn-confirm-cancel" type="button" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold">
+            Cancelar
+          </button>
+          <button id="btn-confirm-ok" type="button" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm">
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- TOAST / SNACKBAR NOTIFICATIONS (ANDROID STYLE)                        -->
+  <!-- ===================================================================== -->
+  <div id="toast-container" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none"></div>
+
+  <!-- ===================================================================== -->
+  <!-- LÓGICA COMPLETA EM JAVASCRIPT PURO (ES6+)                             -->
+  <!-- ===================================================================== -->
+  <script src="js/app.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>
