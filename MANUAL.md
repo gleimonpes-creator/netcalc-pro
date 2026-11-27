@@ -1,7 +1,7 @@
 # Manual Completo — NetCalc Pro
 
 ## 1. Visão Geral
-O **NetCalc Pro** (`netcalc-pro-v3.html`) roda localmente no navegador de computadores ou celulares, salvando projetos e histórico recente no `localStorage` do dispositivo, com suporte a backup e restauração em JSON.
+O **NetCalc Pro** (`index.html`) roda localmente no navegador de computadores ou celulares, salvando projetos e histórico recente no `localStorage` do dispositivo, com suporte a backup e restauração em JSON.
 
 ## 2. Calculadora CIDR e Divisão de Sub-redes
 - Informe um endereço IPv4 válido (ex.: `192.168.1.0`) e escolha o prefixo CIDR (`/0` a `/32`) pelo seletor ou controle deslizante.
